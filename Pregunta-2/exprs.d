@@ -9,7 +9,7 @@ import std.string;
 //   Necesito una función que valide que en la entrada los primeros dos parámetros sean comandos válidos
 //   Necesito una función que verifique que en la expresión hayan operadores (+, -, *, /) o números nada más.
 //   Necesito una función que ejecute EVAL PRE expr y otra que ejecute EVAL POS expr
-//      Necesito un validador de expresión correcta para ambas
+//   Necesito un validador de expresión correcta para ambas
 
 
 // Idea para la función de EVAL PRE: Utilizar recursión
