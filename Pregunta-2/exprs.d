@@ -4,22 +4,6 @@ import std.algorithm;
 import utils.utils;
 import std.string;
 
-//Requerimientos:
-//   Necesito una función que haga split de la entrada basada en espacios.
-//   Necesito una función que valide que en la entrada los primeros dos parámetros sean comandos válidos
-//   Necesito una función que verifique que en la expresión hayan operadores (+, -, *, /) o números nada más.
-//   Necesito una función que ejecute EVAL PRE expr y otra que ejecute EVAL POS expr
-//   Necesito un validador de expresión correcta para ambas
-
-
-// Idea para la función de EVAL PRE: Utilizar recursión
-//    pre_eval(["+", "*", "2", "3", "4"]) = pre_eval(["*", "2", "3"]) + 4 = (pre_eval(["2"]) * 3) + 4 = (2 * 3) + 4 
-
-// Con esto, está claro que podríamos definir a pre_eval como
-//     pre_eval([n]) = n       si n es un número
-//     pre_eval(["o",...,"n"]) = pre_eval([...]) o n        si o es un operador y n un número
-// En cualquier otro caso, error
-
 string[] valid_operators = ["+", "-", "*", "/"];
 
 int[string] precedence = [

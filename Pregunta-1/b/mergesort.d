@@ -1,42 +1,52 @@
 import std.stdio;
 import std.conv;
-import std.math;
 
-float[] merge(float[] left_array, float[] right_array){
-    float[] mix_array = [];
+float[] merge(float[] left, float[] right) {
+    float[] result;
+    result.length = left.length + right.length;
 
-    while(left_array.length != 0 && right_array.length != 0){
-        if(left_array[0] < right_array[0]){
-            mix_array ~= left_array[0];
-            left_array = left_array[1..$];
-        } else if(left_array[0] >= right_array[0]){
-            mix_array ~= right_array[0];
-            right_array = right_array[1..$];
-        }
+    // Uso de índices de control de avance los arreglos
+    size_t i = 0, j = 0, k = 0;
+
+    // Mientras ninguno sea vacío,
+    // comparar que próximo valor es mejor y colocarlo en result
+    while (i < left.length && j < right.length) {
+        if (left[i] < right[j])
+            result[k++] = left[i++];
+        else
+            result[k++] = right[j++];
     }
 
-    mix_array ~= left_array ~ right_array;
-    return mix_array;
+    // Copiar los sobrantes
+    while (i < left.length)
+        result[k++] = left[i++];
 
+    while (j < right.length)
+        result[k++] = right[j++];
+
+    return result;
 }
 
 float[] merge_sort(float[] array){
+    // Caso base
     if(array.length == 1){
         return array;
     }
 
+    // Dividimos el arreglo en dos mitades
     int mid = array.length / 2;
     float[] left_array = array[0..mid]; 
     float[] right_array = array[mid..$];
 
-    //Ordenados
+    // Ordenamos esas mitades
     left_array = merge_sort(left_array);
     right_array = merge_sort(right_array);
 
+    // Mezclamos dichos arreglos
     return merge(left_array, right_array);
 
 }
 
 void main(){
-    writeln(merge_sort([2]));
+    writeln(merge_sort([1,2,6,7,2,2,1,0,6]));
 }
