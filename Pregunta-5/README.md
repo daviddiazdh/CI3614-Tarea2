@@ -30,8 +30,10 @@ El archivo principal (`maldad`) ha sido cuidadosamente diseñado para que compil
 - C:             ```$ gcc maldad -o maldad 
 $ ./maldad```
 
-- C++:           ```$ g++ maldad -o maldad
-./maldad```
+- C++:           ```$ g++ maldad.cpp -o maldad
+$ ./maldad```
+
+(Note que hay que cambiar la extensión del archivo a .cpp)
 
 - Objective C:   ```Copiar código en https://ideone.com/ y ejecutar usando Objective C``` 
 

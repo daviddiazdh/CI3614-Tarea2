@@ -43,7 +43,7 @@ int parse_to_int(string str_num){
         num = to!int(str_num);
         return num;
     } catch(Exception e){
-        throw new Exception("Los argumentos deben ser número u operadores");
+        throw new Exception("Los argumentos deben ser números u operadores");
     }
 }
 

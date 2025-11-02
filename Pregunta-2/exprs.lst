@@ -43,7 +43,7 @@
      92|        num = to!int(str_num);
      87|        return num;
        |    } catch(Exception e){
-      5|        throw new Exception("Los argumentos deben ser número u operadores");
+      5|        throw new Exception("Los argumentos deben ser números u operadores");
        |    }
        |}
        |
