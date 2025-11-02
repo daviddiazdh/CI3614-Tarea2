@@ -1,0 +1,661 @@
+       |import std.stdio;
+       |import std.conv;
+       |import std.algorithm;
+       |import std.string;
+       |import core.exception : RangeError;
+       |
+       |// Tipo de dato que se usará en la evaluación de una expresión prefija,
+       |// más adelante se explica
+       |struct PrefixRecursionState
+       |{
+       |    string[] not_parsed_array;
+       |    int value = 0;
+       |    string expression = "";
+       |}
+       |
+       |// Tipo de dato que se usa para el estado de la evaluación del input de usuario
+       |struct OutputData
+       |{
+       |    bool exit;
+       |    string output;
+       |}
+       |
+       |// Arreglo que contiene todos los operadores válidos
+       |string[] valid_operators = ["+", "-", "*", "/"];
+       |
+       |// Arreglo que indica la precedencia de operadores 
+       |// (no hace falta uno para asociatividad porque asocian a izquierda todos)
+       |int[string] precedence = [
+       |    "+": 1,
+       |    "-": 1,
+       |    "*": 2,
+       |    "/": 2
+       |];
+       |
+       |// =============================================================================================
+       |// Funciones de utilidad
+       |// =============================================================================================
+       |
+       |// Función que intenta parsear a entero, pero al fallar lanza una excepción
+       |int parse_to_int(string str_num){
+     92|    int num;
+       |    try{
+     92|        num = to!int(str_num);
+     87|        return num;
+       |    } catch(Exception e){
+      5|        throw new Exception("Los argumentos deben ser número u operadores");
+       |    }
+       |}
+       |
+       |// Función que en un arreglo de strings intenta buscar cuál es el primer operador,
+       |// se le llama next_operator porque se usa en un contexto donde se quiere averiguar
+       |// el próximo operador para verificar la necesidad de paréntesis. 
+       |string next_operator(string[] expr_array){
+     14|    int i = 0;
+     14|    int n = expr_array.length;
+     24|    while(i < n){
+     17|        string element = expr_array[i];
+     17|        switch (element){
+      3|            case "+": 
+      4|            case "-": 
+      6|            case "*":
+      7|            case "/":
+      7|                return element;
+     10|            default:
+     10|                break;
+       |        }
+     10|        i = i + 1;
+       |    }
+      7|    return "";
+       |}
+       |
+       |// Función con tipo genérico que concatena el elemento element al final del arreglo stack
+       |void push(T)(ref T[] stack, T element) {
+     80|    stack ~= element;
+       |}
+       |
+       |// Función con tipo genérico para quitar el último elemento en el stack
+       |T pop(T)(ref T[] stack) {
+       |    try {
+     66|        T element = stack[$ - 1];
+     62|        stack = stack[0 .. $ - 1];
+     62|        return element;
+       |    } catch (RangeError e) {
+      4|        throw new Exception("Expresión inválida");
+       |    } catch (Exception e) {
+       |        throw new Exception("Expresión inválida");
+       |    }
+       |}
+       |
+       |// =============================================================================================
+       |
+       |
+       |// =============================================================================================
+       |// Función: prefix_eval
+       |// =============================================================================================
+       |// La función prefix_eval reciba la expresión en un arreglo que contiene
+       |// los operadores y operandos de la expresión en string.
+       |// Esta función se encarga evaluar una expresión prefija de forma recursiva, 
+       |// si recibe un número, entonces actualiza el arreglo de expresión quitando dicho número y 
+       |// devuelve tanto el arreglo actualizado como el número.
+       |// Sin embargo, si recibe un operador, entonces se llama recursivamente 
+       |// para obtener la expresión izquierda, una vez que recibe la respuesta, 
+       |// entonces vuelve a llamarse recursivamente, pero con el nuevo arreglo que no pudo terminar 
+       |// de analizar la expresión izquierda, si todo sale bien, entonces 
+       |// opera los resultados númericos tanto de la izquierda como de la derecha y devuelve el arreglo 
+       |// parseado (hasta donde pudo la expresión derecha) y el valor de la expresión resultante.
+       |// Ejemplo de uso: 
+       |// prefix_eval(["+", "*", "2", "2", "3"]) debería devolver una estructura como esta
+       |// {
+       |//   not_parsed_array = "[]",
+       |//   value = 7,
+       |//   expression = ""
+       |// }     
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |PrefixRecursionState prefix_eval(string[] expr_array){
+     39|    if(expr_array == []){
+      3|        throw new Exception("Expresión prefija inválida.");
+       |    }
+       |
+     36|    string element = expr_array[0];
+       |
+     36|    if(!valid_operators.canFind(element)){
+     21|        int num = parse_to_int(expr_array[0]);
+     20|        return PrefixRecursionState(expr_array[1..$], num);
+       |    }
+       |
+     15|    string operator = element;
+     15|    PrefixRecursionState left_expr = prefix_eval(expr_array[1..$]);
+       |
+     13|    if(left_expr.not_parsed_array == []){
+0000000|        throw new Exception("Expresión prefija inválida.");
+       |    }
+       |
+     13|    PrefixRecursionState right_expr = prefix_eval(left_expr.not_parsed_array);
+       |
+     13|    switch (operator) {
+     14|        case "+": return PrefixRecursionState(right_expr.not_parsed_array, left_expr.value + right_expr.value);
+      2|        case "-": return PrefixRecursionState(right_expr.not_parsed_array, left_expr.value - right_expr.value);
+      8|        case "*": return PrefixRecursionState(right_expr.not_parsed_array, left_expr.value * right_expr.value);
+      2|        case "/": return PrefixRecursionState(right_expr.not_parsed_array, left_expr.value / right_expr.value);
+0000000|        default: throw new Exception("Operador inválido");
+       |    }
+       |}
+       |
+       |
+       |// =============================================================================================
+       |// Función: prefix_to_infix
+       |// =============================================================================================
+       |// La función prefix_to_infix hace exactamente lo mismo que la función pre_eval, pero
+       |// en vez de devolver la expresión evaluada, devuelve la expresión parseada a string en infijo.
+       |// Nuevamente, el caso base es cuando se encuentra con un número, y el caso recursivo cuando
+       |// se encuentra con un operador, en este caso, manda a parsear la expresión recursivamente
+       |// hasta donde pueda para obtener la expresión izquierda, luego tomará el arreglo de expresión
+       |// que quedó por parsear y lo volverá a evaluar recursivamente para la expresión derecha,
+       |// finalmente tomará los strings generados por la izquierda y derecha y los concatenará con el
+       |// respectivo operador. Esta debe saber cuando usar paréntesis y lo hace guardando el último
+       |// operador parseado, si la precedencia del último operador parseado es mayor que la del actual
+       |// operador, entonces también concatena paréntesis al inicio y final
+       |// Ejemplo de uso: 
+       |// prefix_to_infix(["+", "*", "2", "2", "3"]) debería devolver una estructura como esta
+       |// {
+       |//   not_parsed_array = "[]",
+       |//   value = 0,
+       |//   expression = "2 * 2 + 3"
+       |// }     
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |PrefixRecursionState prefix_to_infix(string[] expr_array, string last_operator = ""){
+     36|    if(expr_array == []){
+      1|        throw new Exception("Expresión prefija inválida.");
+       |    }
+       |
+     35|    string element = expr_array[0];
+       |
+     35|    if(!valid_operators.canFind(element)){
+     21|        int num = parse_to_int(expr_array[0]);
+     20|        return PrefixRecursionState(not_parsed_array: expr_array[1..$], expression: expr_array[0]);
+       |    }
+       |
+     14|    string operator = element;
+     14|    PrefixRecursionState left_expr = prefix_to_infix(expr_array[1..$], operator);
+       |
+     13|    if(left_expr.not_parsed_array == []){
+0000000|        throw new Exception("Expresión prefija inválida.");
+       |    }
+       |
+     13|    PrefixRecursionState right_expr = prefix_to_infix(left_expr.not_parsed_array, operator);
+       |
+     19|    if(last_operator == "" || precedence[last_operator] <= precedence[operator]){
+     10|        return PrefixRecursionState(
+       |            not_parsed_array: right_expr.not_parsed_array,
+       |            expression: left_expr.expression ~ " " ~ operator ~ " " ~ right_expr.expression
+       |        );
+       |    } else {
+      3|        return PrefixRecursionState(
+       |            not_parsed_array: right_expr.not_parsed_array,
+       |            expression: "(" ~ left_expr.expression ~ " " ~ operator ~ " " ~ right_expr.expression ~ ")"
+       |        );
+       |    }
+       |}
+       |
+       |// =============================================================================================
+       |// Función: postfix_eval
+       |// =============================================================================================
+       |// La función postfix_eval se fundamenta en una pila para la evaluación de la expresión, al igual
+       |// que antes, esta trabaja sobre un arreglo de strings que contiene operadores y operandos, 
+       |// esta no funciona recursivamente, sino iterativamente, tratará de evaluar la expresión hasta que
+       |// el arreglo esté vacío. 
+       |// Comienza tomando un elemento del arreglo, entonces se tienen tres casos
+       |//    Si el elemento es un número, entonces lo empila a expr_stack
+       |//    Si el elemento es un operador (todos binarios), entonces desempila dos elementos de expr_stack
+       |//    y los opera con dicho operador y empila el resultado en expr_stack
+       |//    Si el elemento no es un operador ni un número, entonces lanza una excepción. 
+       |// Esto se repite hasta que expr_array esté vacío, en dicho momento, al principio de la pila estará
+       |// el resultado si todo salió bien. Si en la pila hay más de un elemento al finalizar, entonces
+       |// la expresión dada era inválida y lanza una excepción.
+       |// Ejemplo de uso: 
+       |// podtfix_eval(["2", "2", "*", "3", "+"]) debería devolver 7
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |float postfix_eval(string[] expr_array){
+     12|    if(expr_array == []){
+      1|        throw new Exception("Expresión postfija inválida.");
+       |    }
+       |
+     11|    int[] expr_stack = []; 
+       |
+       |    // Si expr_array no es vacío
+     57|    while(expr_array != []){
+       |        
+     49|        string element = expr_array[0];
+     49|        expr_array = expr_array[1..$];
+       |
+     49|        if(valid_operators.canFind(element)){
+     20|            int first_operand = pop(expr_stack);
+     18|            int second_operand = pop(expr_stack);
+       |
+     18|            switch (element){
+     10|                case "+": 
+     10|                    push(expr_stack, second_operand + first_operand);
+     10|                    break;
+      3|                case "-": 
+      3|                    push(expr_stack, second_operand - first_operand);
+      3|                    break;
+      4|                case "*": 
+      4|                    push(expr_stack, second_operand * first_operand);
+      4|                    break;
+      1|                case "/": 
+      1|                    push(expr_stack, second_operand / first_operand);
+      1|                    break;
+0000000|                default:
+0000000|                    break;
+       |            }
+     18|            continue;
+       |        }
+     29|        int num = parse_to_int(element);
+     28|        push(expr_stack, num);
+       |    }
+       |
+      8|    if(expr_stack.length != 1){
+      2|        throw new Exception("Expresión postfija inválida.");
+       |    }
+       |
+      6|    return expr_stack[0];
+       |}
+       |
+       |
+       |// =============================================================================================
+       |// La función postfix_to_infix convierte una expresión postfija a infija, al igual que postfix_eval,
+       |// esta usa la pila expr_stack, pero esta vez guarda las expresiones ya parseada allí, o sea,
+       |// en vez de tener una pila como [1, 5, 10], tiene en cambio una como ["(10 + 1)", "2 * 3", "5"].
+       |// Al igual que antes, se toma el primer elemento de expr_array y se dan tres casos
+       |//    Si el elemento es un número, entonces se mantiene en string el número y se devuelve
+       |//    Si el elemento es un operador válido, entonces se desempilan dos expresiones de la pila y
+       |//    se concatenan con el operador en medio, pero se debe verificar la necesiadad de paréntesis,
+       |//    para ello, se busca cuál es el siguiente operador en expr_array, si el próximo operador
+       |//    tiene mayor precedencia que el actual, entonces se deben usar paréntesis.
+       |//    Si no es número ni operador, entonces lanza excepción.
+       |// Al igual que postfix_eval si el programa termina y la pila no tiene un solo elemento, entonces
+       |// la expresión dada no fua válida y se lanza una excepción.
+       |// Ejemplo de uso: 
+       |// podtfix_eval(["2", "2", "*", "3", "+"]) debería devolver "2 * 2 + 3"
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |string postfix_to_infix(string[] expr_array){
+     10|    if(expr_array == []){
+      1|        throw new Exception("Expresión postfija inválida.");
+       |    }
+       |
+      9|    string[] expr_stack = [];
+       |
+       |    // Si expr_array no es vacío
+     39|    while(expr_array != []){
+     33|        string element = expr_array[0];
+     33|        expr_array = expr_array[1..$];
+       |
+     33|        if(valid_operators.canFind(element)){
+     14|            string first_operand = pop(expr_stack);
+     12|            string second_operand = pop(expr_stack);
+       |            
+     12|            string next_operator = next_operator(expr_array);
+       |
+     18|            if(next_operator == "" || precedence[next_operator] <= precedence[element]){
+      9|                push(expr_stack, second_operand ~ " " ~ element ~ " " ~ first_operand);
+       |            } else{
+      3|                push(expr_stack, "(" ~ second_operand ~ " " ~ element ~ " " ~ first_operand ~ ")");
+       |            }
+       |
+     12|            continue;
+       |
+       |        }
+     19|        int num = parse_to_int(element);
+     18|        push(expr_stack, element);
+       |    }
+       |
+      6|    if(expr_stack.length != 1){
+0000000|        throw new Exception("Expresión postfija inválida.");
+       |    }
+       |
+      6|    return expr_stack[0];
+       |
+       |}
+       |
+       |OutputData parse_entry(string[] entries_arr){
+     31|    float result;
+     31|    string result_str;
+       |
+       |    // Hacemos un toLower para permitir que el usuario escriba eval o eVal o EVAL 
+       |    // o cualquier combinación entre mayúsculas y minúsculas
+     31|    switch(toLower(entries_arr[0])){
+     14|        case "eval":
+     14|            switch(toLower(entries_arr[1])){
+      7|                case "pre":
+      7|                    PrefixRecursionState prefix_result = prefix_eval(entries_arr[2..$]);
+       |                    // Si quedó parte de la expresión por parsear, entonces la expresión no es válida
+      5|                    if(prefix_result.not_parsed_array != []){
+      1|                        throw new Exception("Error: Expresión prefija no válida.");
+       |                    }
+      4|                    return OutputData(false, to!string(prefix_result.value));
+      6|                case "post":
+      6|                    result = postfix_eval(entries_arr[2..$]);
+      4|                    return OutputData(false, to!string(result));
+      1|                default:
+      1|                    throw new Exception("Error: Comando con uso erróneo.\nUso: EVAL [PRE/POST] [expr]");
+       |            }
+     14|        case "mostrar":
+     14|            switch(toLower(entries_arr[1])){
+      7|                case "pre":
+      7|                    PrefixRecursionState prefix_result = prefix_to_infix(entries_arr[2..$]);
+       |                    // Si quedó parte de la expresión por parsear, entonces la expresión no es válida
+      5|                    if(prefix_result.not_parsed_array != []){
+      1|                        throw new Exception("Error: Expresión prefija no válida.");
+       |                    }
+      4|                    return OutputData(false, prefix_result.expression);
+      6|                case "post":
+      6|                    result_str = postfix_to_infix(entries_arr[2..$]);
+      4|                    return OutputData(false, result_str);
+       |                    
+      1|                default:
+      1|                    throw new Exception("Error: Comando con uso erróneo.\nUso: MOSTRAR [PRE/POST] [expr]");
+       |                    
+       |            }
+      1|        case "salir":
+      1|            return OutputData(true, "Cerrando...");
+      1|        case "ayuda":
+      1|            string[] help_array = [
+       |                "EVAL PRE [expr]        -> Evalúa la expresión [expr] que debe está en forma prefija.\n",
+       |                "EVAL POST [expr]       -> Evalúa la expresión [expr] que debe está en forma postfija.\n",
+       |                "MOSTRAR PRE [expr]     -> Muestra la expresión [expr], que debe está en forma prefija, en su forma infija.\n",
+       |                "MOSTRAR POST [expr]    -> Muestra la expresión [expr], que debe está en forma postfija, en su forma infija.\n",
+       |                "SALIR                  -> Sale del programa."
+       |            ];
+      1|            return OutputData(false, help_array[0] ~ help_array[1] ~ help_array[2] ~ help_array[3] ~ help_array[4]);
+      1|        default:
+      1|            throw new Exception("Error: Comando desconocido.");
+       |    }
+       |}
+       |
+       |
+       |
+       |void main(){
+0000000|    writeln("Bienvenido al analizador de expresiones prefijas y postfijas.\nEscriba AYUDA si requiere asistencia.");
+       |
+0000000|    while(true){
+0000000|        write("> ");
+0000000|        string entry = readln();
+0000000|        entry = entry[0..$-1];
+       |        // Se dividen los elementos enviados por medio de un espacio
+0000000|        string[] entries_arr = entry.split(" ");
+       |
+0000000|        if(entries_arr.length == 0){
+0000000|            writeln("Error: Debe ingresar un comando.");
+0000000|            continue;
+       |        }
+       |
+       |        // Utilizamos try catch para enviar excepciones y sean reconocidas en el catch sin tener que
+       |        // establecer métodos para salir de las funciones llamadas y demás.
+       |        try{
+       |
+0000000|            OutputData output = parse_entry(entries_arr);
+0000000|            writeln(output.output);
+0000000|            if(output.exit){
+0000000|                break;
+       |            }
+       |
+       |        } catch (Exception e){
+0000000|            writeln("Error: ", e.msg);
+       |        }
+       |    }
+       |
+       |}
+       |
+       |
+       |
+       |
+       |
+       |
+       |
+       |
+       |// ===================================================
+       |// Pruebas unitarias y de integración
+       |// ===================================================
+       |unittest {
+       |    import std.stdio;
+       |
+       |    // =============================
+       |    // Pruebas para parse_to_int
+       |    // =============================
+      1|    assert(parse_to_int("42") == 42);
+      1|    bool caught = false;
+      2|    try { parse_to_int("abc"); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // =============================
+       |    // Pruebas para next_operator
+       |    // =============================
+      1|    assert(next_operator(["3", "+", "4"]) == "+");
+      1|    assert(next_operator(["3", "4", "5"]) == "");
+       |
+       |    // =============================
+       |    // Pruebas para push / pop genéricos
+       |    // =============================
+      1|    int[] s = [];
+      1|    push(s, 10);
+      1|    push(s, 20);
+      1|    assert(s == [10, 20]);
+      1|    assert(pop(s) == 20);
+      1|    assert(s == [10]);
+       |
+      1|    string[] st = [];
+      1|    push(st, "hola");
+      1|    push(st, "mundo");
+      1|    assert(st == ["hola", "mundo"]);
+      1|    assert(pop(st) == "mundo");
+      1|    assert(st == ["hola"]);
+       |
+       |    // =============================
+       |    // Pruebas para prefix_eval
+       |    // =============================
+      1|    PrefixRecursionState pre1 = prefix_eval(["+", "*", "2", "2", "3"]);
+      1|    assert(pre1.value == 7);
+      1|    assert(pre1.not_parsed_array.length == 0);
+       |
+      1|    PrefixRecursionState pre2 = prefix_eval(["*", "+", "1", "2", "3"]);
+      1|    assert(pre2.value == 9);
+       |
+       |    // Casos inválidos
+      1|    caught = false;
+      2|    try { prefix_eval([]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try { prefix_eval(["+"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // =============================
+       |    // Pruebas para prefix_to_infix
+       |    // =============================
+      1|    PrefixRecursionState pre3 = prefix_to_infix(["+", "*", "2", "2", "3"]);
+      1|    assert(pre3.expression == "2 * 2 + 3");
+       |
+      1|    PrefixRecursionState pre4 = prefix_to_infix(["*", "+", "1", "2", "3"]);
+      1|    assert(pre4.expression == "(1 + 2) * 3");
+       |
+       |    // =============================
+       |    // Pruebas para postfix_eval
+       |    // =============================
+      1|    assert(postfix_eval(["2", "2", "*", "3", "+"]) == 7);
+      1|    assert(postfix_eval(["5", "1", "2", "+", "4", "*", "+", "3", "-"]) == 14);
+       |
+       |    // Casos inválidos
+      1|    caught = false;
+      2|    try { postfix_eval([]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try { postfix_eval(["+", "2"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try { postfix_eval(["2", "2", "+", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // =============================
+       |    // Pruebas para postfix_to_infix
+       |    // =============================
+      1|    string res1 = postfix_to_infix(["2", "2", "*", "3", "+"]);
+      1|    assert(res1 == "2 * 2 + 3");
+       |
+      1|    string res2 = postfix_to_infix(["1", "2", "+", "3", "*"]);
+      1|    assert(res2 == "(1 + 2) * 3");
+       |
+      1|    caught = false;
+      2|    try { postfix_eval(["2", "2", "+", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // Casos inválidos
+      1|    caught = false;
+      2|    try { postfix_to_infix([]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try { postfix_to_infix(["+"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // =============================
+       |    // Pruebas para parse_entry
+       |    // =============================
+       |
+       |    // Uso erróneo de comandos
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["eval", "amigo", "+", "*", "2", "2", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["mostrar", "amigo", "+", "*", "2", "2", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["mostrar", "pre", ""]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["eval", "pre", ""]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|     caught = false;
+      2|    try {  parse_entry(["mostrar", "post", ""]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["eval", "post", ""]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // Expresiones inválidad en prefijo
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["eval", "pre", "+", "2", "2", "*", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    caught = false;
+      2|    try {  parse_entry(["mostrar", "pre", "+", "2", "2", "*", "3"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |
+       |    // EVAL PRE
+      1|    OutputData output1 = parse_entry(["eval", "pre", "+", "*", "2", "2", "3"]);
+      1|    assert(!output1.exit);
+      1|    assert(output1.output == "7");
+       |
+      1|    OutputData output2 = parse_entry(["eval", "pre", "*", "+", "1", "2", "3"]);
+      1|    assert(output2.output == "9");
+       |
+      1|    output2 = parse_entry(["eval", "pre", "/", "+", "3", "3", "3"]);
+      1|    assert(output2.output == "2");
+       |
+      1|    output2 = parse_entry(["eval", "pre", "-", "+", "3", "3", "3"]);
+      1|    assert(output2.output == "3");
+       |
+      1|    caught = false;
+      2|    try { parse_entry(["eval", "pre", "+"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // EVAL POST
+      1|    OutputData output3 = parse_entry(["eval", "post", "2", "2", "*", "3", "+"]);
+      1|    assert(output3.output == "7");
+       |
+      1|    OutputData output4 = parse_entry(["eval", "post", "5", "1", "2", "+", "4", "*", "+", "3", "-"]);
+      1|    assert(output4.output == "14");
+       |
+      1|    output4 = parse_entry(["eval", "post", "3", "3", "+", "3", "/"]);
+      1|    assert(output4.output == "2");
+       |
+      1|    output4 = parse_entry(["eval", "post", "3", "3", "+", "3", "-"]);
+      1|    assert(output4.output == "3");
+       |    
+       |
+      1|    caught = false;
+      2|    try { parse_entry(["eval", "post", "+", "2"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // MOSTRAR PRE
+      1|    OutputData output5 = parse_entry(["mostrar", "pre", "+", "*", "2", "2", "3"]);
+      1|    assert(output5.output == "2 * 2 + 3");
+       |
+      1|    OutputData output6 = parse_entry(["mostrar", "pre", "*", "+", "1", "2", "3"]);
+      1|    assert(output6.output == "(1 + 2) * 3");
+       |
+      1|    output6 = parse_entry(["mostrar", "pre", "/", "+", "3", "3", "3"]);
+      1|    assert(output6.output == "(3 + 3) / 3");
+       |
+      1|    output6 = parse_entry(["mostrar", "pre", "-", "+", "3", "3", "3"]);
+      1|    assert(output6.output == "3 + 3 - 3");
+       |
+      1|    caught = false;
+      2|    try { parse_entry(["mostrar", "pre", "+"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // MOSTRAR POST
+      1|    OutputData output7 = parse_entry(["mostrar", "post", "2", "2", "*", "3", "+"]);
+      1|    assert(output7.output == "2 * 2 + 3");
+       |
+      1|    OutputData output8 = parse_entry(["mostrar", "post", "1", "2", "+", "3", "*"]);
+      1|    assert(output8.output == "(1 + 2) * 3");
+       |
+      1|    output8 = parse_entry(["mostrar", "post", "3", "3", "+", "3", "/"]);
+      1|    assert(output8.output == "(3 + 3) / 3");
+       |
+      1|    output8 = parse_entry(["mostrar", "post", "3", "3", "+", "3", "-"]);
+      1|    assert(output8.output == "3 + 3 - 3");
+       |
+      1|    caught = false;
+      2|    try { parse_entry(["mostrar", "post", "+"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+       |    // SALIR
+      1|    OutputData output9 = parse_entry(["salir"]);
+      1|    assert(output9.exit);
+      1|    assert(output9.output == "Cerrando...");
+       |
+       |    // AYUDA
+      1|    OutputData output10 = parse_entry(["ayuda"]);
+      1|    assert(!output10.exit);
+      1|    assert(output10.output.canFind("EVAL PRE [expr]        -> Evalúa la expresión [expr] que debe está en forma prefija.\n"));
+      1|    assert(output10.output.canFind("EVAL POST [expr]       -> Evalúa la expresión [expr] que debe está en forma postfija.\n"));
+      1|    assert(output10.output.canFind("MOSTRAR PRE [expr]     -> Muestra la expresión [expr], que debe está en forma prefija, en su forma infija.\n"));
+      1|    assert(output10.output.canFind("MOSTRAR POST [expr]    -> Muestra la expresión [expr], que debe está en forma postfija, en su forma infija.\n"));
+      1|    assert(output10.output.canFind("SALIR                  -> Sale del programa."));
+       |
+       |    // COMANDO DESCONOCIDO
+      1|    caught = false;
+      2|    try { parse_entry(["desconocido"]); } catch (Exception e) { caught = true; }
+      1|    assert(caught);
+       |
+      1|    writeln("✅ ¡Todas las pruebas de parse_entry pasaron correctamente!");
+       |
+      1|    writeln("¡Todas las pruebas unitarias pasaron correctamente!");
+       |}
+exprs.d is 93% covered

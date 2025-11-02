@@ -13,6 +13,13 @@ struct PrefixRecursionState
     string expression = "";
 }
 
+// Tipo de dato que se usa para el estado de la evaluación del input de usuario
+struct OutputData
+{
+    bool exit;
+    string output;
+}
+
 // Arreglo que contiene todos los operadores válidos
 string[] valid_operators = ["+", "-", "*", "/"];
 
@@ -315,9 +322,65 @@ string postfix_to_infix(string[] expr_array){
 
 }
 
+OutputData parse_entry(string[] entries_arr){
+    float result;
+    string result_str;
+
+    // Hacemos un toLower para permitir que el usuario escriba eval o eVal o EVAL 
+    // o cualquier combinación entre mayúsculas y minúsculas
+    switch(toLower(entries_arr[0])){
+        case "eval":
+            switch(toLower(entries_arr[1])){
+                case "pre":
+                    PrefixRecursionState prefix_result = prefix_eval(entries_arr[2..$]);
+                    // Si quedó parte de la expresión por parsear, entonces la expresión no es válida
+                    if(prefix_result.not_parsed_array != []){
+                        throw new Exception("Error: Expresión prefija no válida.");
+                    }
+                    return OutputData(false, to!string(prefix_result.value));
+                case "post":
+                    result = postfix_eval(entries_arr[2..$]);
+                    return OutputData(false, to!string(result));
+                default:
+                    throw new Exception("Error: Comando con uso erróneo.\nUso: EVAL [PRE/POST] [expr]");
+            }
+        case "mostrar":
+            switch(toLower(entries_arr[1])){
+                case "pre":
+                    PrefixRecursionState prefix_result = prefix_to_infix(entries_arr[2..$]);
+                    // Si quedó parte de la expresión por parsear, entonces la expresión no es válida
+                    if(prefix_result.not_parsed_array != []){
+                        throw new Exception("Error: Expresión prefija no válida.");
+                    }
+                    return OutputData(false, prefix_result.expression);
+                case "post":
+                    result_str = postfix_to_infix(entries_arr[2..$]);
+                    return OutputData(false, result_str);
+                    
+                default:
+                    throw new Exception("Error: Comando con uso erróneo.\nUso: MOSTRAR [PRE/POST] [expr]");
+                    
+            }
+        case "salir":
+            return OutputData(true, "Cerrando...");
+        case "ayuda":
+            string[] help_array = [
+                "EVAL PRE [expr]        -> Evalúa la expresión [expr] que debe está en forma prefija.\n",
+                "EVAL POST [expr]       -> Evalúa la expresión [expr] que debe está en forma postfija.\n",
+                "MOSTRAR PRE [expr]     -> Muestra la expresión [expr], que debe está en forma prefija, en su forma infija.\n",
+                "MOSTRAR POST [expr]    -> Muestra la expresión [expr], que debe está en forma postfija, en su forma infija.\n",
+                "SALIR                  -> Sale del programa."
+            ];
+            return OutputData(false, help_array[0] ~ help_array[1] ~ help_array[2] ~ help_array[3] ~ help_array[4]);
+        default:
+            throw new Exception("Error: Comando desconocido.");
+    }
+}
+
+
 
 void main(){
-    writeln("Bienvenido al analizador de expresions prefijas y postfijas.\nEscriba AYUDA si requiere asistencia.");
+    writeln("Bienvenido al analizador de expresiones prefijas y postfijas.\nEscriba AYUDA si requiere asistencia.");
 
     while(true){
         write("> ");
@@ -331,65 +394,267 @@ void main(){
             continue;
         }
 
-        float result;
-        string result_str;
-        bool exit = false;
-
         // Utilizamos try catch para enviar excepciones y sean reconocidas en el catch sin tener que
         // establecer métodos para salir de las funciones llamadas y demás.
         try{
-            // Hacemos un toLower para permitir que el usuario escriba eval o eVal o EVAL 
-            // o cualquier combinación entre mayúsculas y minúsculas
-            switch(toLower(entries_arr[0])){
-                case "eval":
-                    switch(toLower(entries_arr[1])){
-                        case "pre":
-                            PrefixRecursionState prefix_result = prefix_eval(entries_arr[2..$]);
-                            writeln(prefix_result.value);
-                            break;
-                        case "post":
-                            result = postfix_eval(entries_arr[2..$]);
-                            writeln(result);
-                            break;
-                        default:
-                            writeln("Error: Comando con uso erróneo.\nUso: EVAL [PRE/POST] [expr]");
-                            break;
-                    }
-                    break;
-                case "mostrar":
-                    switch(toLower(entries_arr[1])){
-                        case "pre":
-                            PrefixRecursionState prefix_result = prefix_to_infix(entries_arr[2..$]);
-                            writeln(prefix_result.expression);
-                            break;
-                        case "post":
-                            result_str = postfix_to_infix(entries_arr[2..$]);
-                            writeln(result_str);
-                            break;
-                        default:
-                            writeln("Error: Comando con uso erróneo.\nUso: MOSTRAR [PRE/POST] [expr]");
-                            break;
-                    }
-                    break;
-                case "salir":
-                    writeln("Cerrando...");
-                    exit = true;
-                    break;
-                case "ayuda":
-                    writeln("EVAL PRE [expr]        -> Evalúa la expresión [expr] que debe está en forma prefija.");
-                    writeln("EVAL POST [expr]       -> Evalúa la expresión [expr] que debe está en forma postfija.");
-                    writeln("MOSTRAR PRE [expr]     -> Muestra la expresión [expr], que debe está en forma prefija, en su forma infija.");
-                    writeln("MOSTRAR POST [expr]    -> Muestra la expresión [expr], que debe está en forma postfija, en su forma infija.");
-                    writeln("SALIR                  -> Sale del programa.");
-                    break;
-                default:
-                    writeln("Error: Comando desconocido.");
-                    break;
+
+            OutputData output = parse_entry(entries_arr);
+            writeln(output.output);
+            if(output.exit){
+                break;
             }
-            if(exit) break;
+
         } catch (Exception e){
             writeln("Error: ", e.msg);
         }
     }
 
+}
+
+
+
+
+
+
+
+
+// ===================================================
+// Pruebas unitarias y de integración
+// ===================================================
+unittest {
+    import std.stdio;
+
+    // =============================
+    // Pruebas para parse_to_int
+    // =============================
+    assert(parse_to_int("42") == 42);
+    bool caught = false;
+    try { parse_to_int("abc"); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // =============================
+    // Pruebas para next_operator
+    // =============================
+    assert(next_operator(["3", "+", "4"]) == "+");
+    assert(next_operator(["3", "4", "5"]) == "");
+
+    // =============================
+    // Pruebas para push / pop genéricos
+    // =============================
+    int[] s = [];
+    push(s, 10);
+    push(s, 20);
+    assert(s == [10, 20]);
+    assert(pop(s) == 20);
+    assert(s == [10]);
+
+    string[] st = [];
+    push(st, "hola");
+    push(st, "mundo");
+    assert(st == ["hola", "mundo"]);
+    assert(pop(st) == "mundo");
+    assert(st == ["hola"]);
+
+    // =============================
+    // Pruebas para prefix_eval
+    // =============================
+    PrefixRecursionState pre1 = prefix_eval(["+", "*", "2", "2", "3"]);
+    assert(pre1.value == 7);
+    assert(pre1.not_parsed_array.length == 0);
+
+    PrefixRecursionState pre2 = prefix_eval(["*", "+", "1", "2", "3"]);
+    assert(pre2.value == 9);
+
+    // Casos inválidos
+    caught = false;
+    try { prefix_eval([]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try { prefix_eval(["+"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // =============================
+    // Pruebas para prefix_to_infix
+    // =============================
+    PrefixRecursionState pre3 = prefix_to_infix(["+", "*", "2", "2", "3"]);
+    assert(pre3.expression == "2 * 2 + 3");
+
+    PrefixRecursionState pre4 = prefix_to_infix(["*", "+", "1", "2", "3"]);
+    assert(pre4.expression == "(1 + 2) * 3");
+
+    // =============================
+    // Pruebas para postfix_eval
+    // =============================
+    assert(postfix_eval(["2", "2", "*", "3", "+"]) == 7);
+    assert(postfix_eval(["5", "1", "2", "+", "4", "*", "+", "3", "-"]) == 14);
+
+    // Casos inválidos
+    caught = false;
+    try { postfix_eval([]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try { postfix_eval(["+", "2"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try { postfix_eval(["2", "2", "+", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // =============================
+    // Pruebas para postfix_to_infix
+    // =============================
+    string res1 = postfix_to_infix(["2", "2", "*", "3", "+"]);
+    assert(res1 == "2 * 2 + 3");
+
+    string res2 = postfix_to_infix(["1", "2", "+", "3", "*"]);
+    assert(res2 == "(1 + 2) * 3");
+
+    caught = false;
+    try { postfix_eval(["2", "2", "+", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // Casos inválidos
+    caught = false;
+    try { postfix_to_infix([]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try { postfix_to_infix(["+"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // =============================
+    // Pruebas para parse_entry
+    // =============================
+
+    // Uso erróneo de comandos
+
+    caught = false;
+    try {  parse_entry(["eval", "amigo", "+", "*", "2", "2", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try {  parse_entry(["mostrar", "amigo", "+", "*", "2", "2", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try {  parse_entry(["mostrar", "pre", ""]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try {  parse_entry(["eval", "pre", ""]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+     caught = false;
+    try {  parse_entry(["mostrar", "post", ""]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try {  parse_entry(["eval", "post", ""]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // Expresiones inválidad en prefijo
+
+    caught = false;
+    try {  parse_entry(["eval", "pre", "+", "2", "2", "*", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    caught = false;
+    try {  parse_entry(["mostrar", "pre", "+", "2", "2", "*", "3"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+
+    // EVAL PRE
+    OutputData output1 = parse_entry(["eval", "pre", "+", "*", "2", "2", "3"]);
+    assert(!output1.exit);
+    assert(output1.output == "7");
+
+    OutputData output2 = parse_entry(["eval", "pre", "*", "+", "1", "2", "3"]);
+    assert(output2.output == "9");
+
+    output2 = parse_entry(["eval", "pre", "/", "+", "3", "3", "3"]);
+    assert(output2.output == "2");
+
+    output2 = parse_entry(["eval", "pre", "-", "+", "3", "3", "3"]);
+    assert(output2.output == "3");
+
+    caught = false;
+    try { parse_entry(["eval", "pre", "+"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // EVAL POST
+    OutputData output3 = parse_entry(["eval", "post", "2", "2", "*", "3", "+"]);
+    assert(output3.output == "7");
+
+    OutputData output4 = parse_entry(["eval", "post", "5", "1", "2", "+", "4", "*", "+", "3", "-"]);
+    assert(output4.output == "14");
+
+    output4 = parse_entry(["eval", "post", "3", "3", "+", "3", "/"]);
+    assert(output4.output == "2");
+
+    output4 = parse_entry(["eval", "post", "3", "3", "+", "3", "-"]);
+    assert(output4.output == "3");
+    
+
+    caught = false;
+    try { parse_entry(["eval", "post", "+", "2"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // MOSTRAR PRE
+    OutputData output5 = parse_entry(["mostrar", "pre", "+", "*", "2", "2", "3"]);
+    assert(output5.output == "2 * 2 + 3");
+
+    OutputData output6 = parse_entry(["mostrar", "pre", "*", "+", "1", "2", "3"]);
+    assert(output6.output == "(1 + 2) * 3");
+
+    output6 = parse_entry(["mostrar", "pre", "/", "+", "3", "3", "3"]);
+    assert(output6.output == "(3 + 3) / 3");
+
+    output6 = parse_entry(["mostrar", "pre", "-", "+", "3", "3", "3"]);
+    assert(output6.output == "3 + 3 - 3");
+
+    caught = false;
+    try { parse_entry(["mostrar", "pre", "+"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // MOSTRAR POST
+    OutputData output7 = parse_entry(["mostrar", "post", "2", "2", "*", "3", "+"]);
+    assert(output7.output == "2 * 2 + 3");
+
+    OutputData output8 = parse_entry(["mostrar", "post", "1", "2", "+", "3", "*"]);
+    assert(output8.output == "(1 + 2) * 3");
+
+    output8 = parse_entry(["mostrar", "post", "3", "3", "+", "3", "/"]);
+    assert(output8.output == "(3 + 3) / 3");
+
+    output8 = parse_entry(["mostrar", "post", "3", "3", "+", "3", "-"]);
+    assert(output8.output == "3 + 3 - 3");
+
+    caught = false;
+    try { parse_entry(["mostrar", "post", "+"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    // SALIR
+    OutputData output9 = parse_entry(["salir"]);
+    assert(output9.exit);
+    assert(output9.output == "Cerrando...");
+
+    // AYUDA
+    OutputData output10 = parse_entry(["ayuda"]);
+    assert(!output10.exit);
+    assert(output10.output.canFind("EVAL PRE [expr]        -> Evalúa la expresión [expr] que debe está en forma prefija.\n"));
+    assert(output10.output.canFind("EVAL POST [expr]       -> Evalúa la expresión [expr] que debe está en forma postfija.\n"));
+    assert(output10.output.canFind("MOSTRAR PRE [expr]     -> Muestra la expresión [expr], que debe está en forma prefija, en su forma infija.\n"));
+    assert(output10.output.canFind("MOSTRAR POST [expr]    -> Muestra la expresión [expr], que debe está en forma postfija, en su forma infija.\n"));
+    assert(output10.output.canFind("SALIR                  -> Sale del programa."));
+
+    // COMANDO DESCONOCIDO
+    caught = false;
+    try { parse_entry(["desconocido"]); } catch (Exception e) { caught = true; }
+    assert(caught);
+
+    writeln("✅ ¡Todas las pruebas de parse_entry pasaron correctamente!");
+
+    writeln("¡Todas las pruebas unitarias pasaron correctamente!");
 }

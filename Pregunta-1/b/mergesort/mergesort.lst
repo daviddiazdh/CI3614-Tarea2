@@ -1,0 +1,121 @@
+       |import std.stdio;
+       |import std.conv;
+       |
+       |// =============================================================================================
+       |// Función: merge
+       |// =============================================================================================
+       |// Función que implementa la típica función merge, que toma dos arreglos ordenados y los junta
+       |// en un solo arreglo de forma ordenada. Básicamente, compara cada elemento del principio de los
+       |// arreglos, sacando el menor de ellos a el arreglo de mezcla.  
+       |// Ejemplo de uso: 
+       |// merge([1,2,5], [3, 4, 6]) = [1, 2, 3, 4, 5, 6]
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |float[] merge(float[] left, float[] right) {
+     21|    float[] result = [];
+     21|    result.length = left.length + right.length;
+       |
+       |    // Uso de índices de control de avance los arreglos
+     63|    size_t i = 0, j = 0, k = 0;
+       |
+       |    // Mientras ninguno sea vacío,
+       |    // comparar que próximo valor es mejor y colocarlo en result
+    105|    while (i < left.length && j < right.length) {
+     37|        if (left[i] < right[j])
+     16|            result[k++] = left[i++];
+       |        else
+     21|            result[k++] = right[j++];
+       |    }
+       |
+       |    // Copiar los sobrantes
+     34|    while (i < left.length)
+     13|        result[k++] = left[i++];
+       |
+     36|    while (j < right.length)
+     15|        result[k++] = right[j++];
+       |
+     21|    return result;
+       |}
+       |
+       |// =============================================================================================
+       |// Función: merge_sort
+       |// =============================================================================================
+       |// Función que implementa la típica función merge_sort, que divide el arreglo en sub arreglos 
+       |// que se evalúan recursivos y que se consideran ordenados cuando su longitud es uno, para luego
+       |// llamar a merge para que los ordene de a pares según cada llamada.
+       |// Ejemplo de uso: 
+       |// merge_sort([1,5,6,2,4,3) = [1, 2, 3, 4, 5, 6]
+       |// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+       |// =============================================================================================
+       |float[] merge_sort(float[] array){
+       |    // Caso base
+     55|    if(array.length == 1 || array.length == 0){
+     22|        return array;
+       |    }
+       |
+       |    // Dividimos el arreglo en dos mitades
+     16|    int mid = array.length / 2;
+     16|    float[] left_array = array[0..mid]; 
+     16|    float[] right_array = array[mid..$];
+       |
+       |    // Ordenamos esas mitades
+     16|    left_array = merge_sort(left_array);
+     16|    right_array = merge_sort(right_array);
+       |
+       |    // Mezclamos dichos arreglos
+     16|    return merge(left_array, right_array);
+       |
+       |}
+       |
+       |void main(){
+       |    // Aquí no pasa nada
+       |}
+       |
+       |// =========================================================
+       |// Pruebas Unitarias
+       |// =========================================================
+       |unittest {
+       |    import std.stdio;
+       |
+       |    // =============================
+       |    // Pruebas para merge()
+       |    // =============================
+       |
+       |    // Caso básico
+      1|    assert(merge([1.0, 3.0, 5.0], [2.0, 4.0, 6.0]) == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+       |
+       |    // Con repetidos
+      1|    assert(merge([1.0, 2.0, 2.0], [2.0, 3.0]) == [1.0, 2.0, 2.0, 2.0, 3.0]);
+       |
+       |    // Uno vacío
+      1|    assert(merge([], [1.0, 2.0, 3.0]) == [1.0, 2.0, 3.0]);
+      1|    assert(merge([4.0, 5.0, 6.0], []) == [4.0, 5.0, 6.0]);
+       |
+       |    // Ambos vacíos
+      1|    assert(merge([], []) == []);
+       |
+       |    // =============================
+       |    // Pruebas para merge_sort()
+       |    // =============================
+       |
+       |    // Caso ya ordenado
+      1|    assert(merge_sort([1, 2, 3, 4, 5]) == [1, 2, 3, 4, 5]);
+       |
+       |    // Caso inverso
+      1|    assert(merge_sort([5, 4, 3, 2, 1]) == [1, 2, 3, 4, 5]);
+       |
+       |    // Caso con repetidos
+      1|    assert(merge_sort([1, 5, 3, 3, 2]) == [1, 2, 3, 3, 5]);
+       |
+       |    // Caso con un solo elemento
+      1|    assert(merge_sort([42]) == [42]);
+       |
+       |    // Caso vacío
+      1|    assert(merge_sort([]) == []);
+       |
+       |    // Caso mixto con negativos
+      1|    assert(merge_sort([3, -1, 4, -5, 2]) == [-5, -1, 2, 3, 4]);
+       |
+      1|    writeln("Todas las pruebas de merge() y merge_sort() pasaron correctamente.");
+       |}
+mergesort.d is 100% covered

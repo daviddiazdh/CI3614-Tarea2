@@ -12,7 +12,7 @@ import std.conv;
 // Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
 // =============================================================================================
 float[] merge(float[] left, float[] right) {
-    float[] result;
+    float[] result = [];
     result.length = left.length + right.length;
 
     // Uso de índices de control de avance los arreglos
@@ -49,7 +49,7 @@ float[] merge(float[] left, float[] right) {
 // =============================================================================================
 float[] merge_sort(float[] array){
     // Caso base
-    if(array.length == 1){
+    if(array.length == 1 || array.length == 0){
         return array;
     }
 
@@ -68,5 +68,54 @@ float[] merge_sort(float[] array){
 }
 
 void main(){
-    writeln(merge_sort([1,2,6,7,2,2,1,0,6]));
+    // No hacemos nada en el main porque se pidió la implementación de las funciones, 
+    // no un programa
+}
+
+// =========================================================
+// Pruebas Unitarias
+// =========================================================
+unittest {
+    import std.stdio;
+
+    // =============================
+    // Pruebas para merge()
+    // =============================
+
+    // Caso básico
+    assert(merge([1.0, 3.0, 5.0], [2.0, 4.0, 6.0]) == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+
+    // Con repetidos
+    assert(merge([1.0, 2.0, 2.0], [2.0, 3.0]) == [1.0, 2.0, 2.0, 2.0, 3.0]);
+
+    // Uno vacío
+    assert(merge([], [1.0, 2.0, 3.0]) == [1.0, 2.0, 3.0]);
+    assert(merge([4.0, 5.0, 6.0], []) == [4.0, 5.0, 6.0]);
+
+    // Ambos vacíos
+    assert(merge([], []) == []);
+
+    // =============================
+    // Pruebas para merge_sort()
+    // =============================
+
+    // Caso ya ordenado
+    assert(merge_sort([1, 2, 3, 4, 5]) == [1, 2, 3, 4, 5]);
+
+    // Caso inverso
+    assert(merge_sort([5, 4, 3, 2, 1]) == [1, 2, 3, 4, 5]);
+
+    // Caso con repetidos
+    assert(merge_sort([1, 5, 3, 3, 2]) == [1, 2, 3, 3, 5]);
+
+    // Caso con un solo elemento
+    assert(merge_sort([42]) == [42]);
+
+    // Caso vacío
+    assert(merge_sort([]) == []);
+
+    // Caso mixto con negativos
+    assert(merge_sort([3, -1, 4, -5, 2]) == [-5, -1, 2, 3, 4]);
+
+    writeln("Todas las pruebas de merge() y merge_sort() pasaron correctamente.");
 }
