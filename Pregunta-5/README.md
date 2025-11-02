@@ -27,14 +27,14 @@ El archivo principal (`maldad`) ha sido cuidadosamente diseñado para que compil
 
 ----------------------------------------
 ## Ejecución en los diferentes lenguajes:
-    -C:             `$ gcc maldad -o maldad
-$ ./maldad`
+- C:             ```$ gcc maldad -o maldad 
+$ ./maldad```
 
-    -C++:            `$ g++ maldad -o maldad
-./maldad`
+- C++:           ```$ g++ maldad -o maldad
+./maldad```
 
-    -Objective C:    `Copiar código en Ideone.com y ejecutar usando Objective C` 
+- Objective C:   ```Copiar código en https://ideone.com/ y ejecutar usando Objective C``` 
 
-    -PHP:            `php maldad`
+- PHP:           ```php maldad```
 
-    -WhiteSpace:     `Copiar código en https://vii5ard.github.io/whitespace/ y preisonar "Run"`
+- WhiteSpace:    ```Copiar código en https://vii5ard.github.io/whitespace/ y preisonar "Run"```
