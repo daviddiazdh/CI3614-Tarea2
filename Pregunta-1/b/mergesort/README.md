@@ -1,24 +1,40 @@
-========================================
-                Mergesort
-========================================
+# Mergesort
 
-Lenguaje:
-    D (Dlang)
+> Un programa que implemento un simple algoritmo de mergesort
 
-Archivo principal:
+---
+
+## Descripción
+
+El programa le da al usuario la posibilidad de ordenar un arreglo usando mergesort.
+
+---
+
+## Lenguaje
+
+- **D (Dlang)**
+
+---
+
+## Archivo principal
     mergesort.d
 
-----------------------------------------
-Compilación:
-    dmd mergesort.d
+---
 
-Ejecución normal:
-    ./mergesort
+## Compilación:
+- ```dmd mergesort.d```
 
-Compilación con test y cobertura:
-    dmd mergesort.d -unittest -cov
+---
 
-Ejecución con tests unitarios y cobertura:
-    ./mergesort
+## Ejecución normal:
+- ```./mergesort```
 
-----------------------------------------
+---
+
+## Compilación con tests y cobertura:
+- ```dmd mergesort.d -unittest -cov```
+
+---
+
+## Ejecución con tests unitarios y cobertura:
+- ```./mergesort```
