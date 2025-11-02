@@ -37,4 +37,4 @@ $ ./maldad```
 
 - PHP:           ```php maldad```
 
-- WhiteSpace:    ```Copiar código en https://vii5ard.github.io/whitespace/ y preisonar "Run"```
+- WhiteSpace:    ```Copiar código en https://vii5ard.github.io/whitespace/ y presionar "Run"```
