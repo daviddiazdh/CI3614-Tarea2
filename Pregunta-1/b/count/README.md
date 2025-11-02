@@ -7,8 +7,8 @@
 ## Descripción
 
 El programa implementa el algoritmo de Collatz, que es una función definida de la siguiente manera
-- ```count(n) = n / 2        si n es par 
-count(n) = 3 * n + 1    si n es impar```
+- ```count(n) = n / 2        si n es par```
+- ```count(n) = 3 * n + 1    si n es impar```
 Esta implementación se detiene cuando n = 1 y devuelve cuántas iteraciones tuvo que hacer.
 
 ---
