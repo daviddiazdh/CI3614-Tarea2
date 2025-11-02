@@ -1,5 +1,4 @@
 import std.stdio;
-import std.datetime.stopwatch;
 import std.conv;
 
 int f43(int n){
@@ -55,27 +54,6 @@ int f43_iterative(int n, int[] progress_array = [0,1,2,3,4,5,6,7,8,9,10,11], int
 
 }
 
-
-
-
 void main() {
-    writeln("n;Recursiva;TailRec;Iterativa");// Encabezado
-
-    foreach (n; 0 .. 101) {
-        auto sw1 = StopWatch(AutoStart.yes);
-        f43(n);
-        auto t1 = sw1.peek.total!"usecs";
-
-        auto sw2 = StopWatch(AutoStart.yes);
-        f43_tail_recursive(n);
-        auto t2 = sw2.peek.total!"usecs";
-
-        auto sw3 = StopWatch(AutoStart.yes);
-        f43_iterative(n);
-        auto t3 = sw3.peek.total!"usecs";
-
-        // Imprimir en formato tabulado (pegable en Excel)
-        
-        writeln(n, ";", t1, ";", t2, ";", t3);
-    }
+    
 }

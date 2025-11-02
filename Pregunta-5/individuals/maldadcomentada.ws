@@ -1,6 +1,6 @@
   push 	  			 "N"
 	
-  printc  push 			 	 	"u"
+  printc  push 			 	 	"u"		 	 	
 	
   printc  push 		 		 	"m"
 	
@@ -26,35 +26,69 @@
  	call 					 Log2Piso
   push 	1
 	   sum
- 	call 								 labelTrib
+ 	call 								 TribSetter
 	
  	printi
 
 
 
-  label 								 labelTrib
- 
- dup  push 		3
-	  	sub
-		jn 									 labelTribBase
- 
- dup  push 	1
-	  	sub
- 	call 								 labelTrib
- 	 copy 	1
+  label 								 TribSetter
   push 	 2
+  push 0
+  push 	1
+  push 	 2
+
+ 	call 									 Tribonacci
+	
+ 	printi
+
+
+
+  label 									 Tribonacci
+ 	 copy 	  4
+ 	 copy 	  4
+	  	sub 
+ dup
+	 jz 										 TribonacciBase
+
+		jn 										 TribonacciBase
+
+  label 												 TribonacciBucle
+ 	 copy  	 2
+ 	 copy  	 2
+ 	 copy  	 2
+	   add	   add  push 0
+ 
+	swap		 store  push 	1
+ 
+	swap		 store  push 	 2
+ 
+	swap		 store 
+
+drop  push 	1
+	   sum  push 	 2
+			retrieve  push 	1
+			retrieve  push 0
+			retrieve 	 copy 	  4
+ 	 copy 	  4
 	  	sub
- 	call 								 labelTrib
- 	 copy 	 2
-  push 		3
-	  	sub
- 	call 								 labelTrib
-	   sum	   sum 	
- 	slide1
+	 jz 											 TribonacciValor
+
+ 
+j 												 TribonacciBucle
 
 	return
 
-  label 									 labelTribBase
+  label 											 TribonacciValor
+ 	
+slide 	  4
+
+	return
+
+  label 										 TribonacciBase
+ 	 copy 	  4
+ 	
+slide 	 	5
 
 	return
 

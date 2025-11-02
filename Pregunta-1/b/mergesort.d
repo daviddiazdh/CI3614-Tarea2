@@ -1,6 +1,16 @@
 import std.stdio;
 import std.conv;
 
+// =============================================================================================
+// Función: merge
+// =============================================================================================
+// Función que implementa la típica función merge, que toma dos arreglos ordenados y los junta
+// en un solo arreglo de forma ordenada. Básicamente, compara cada elemento del principio de los
+// arreglos, sacando el menor de ellos a el arreglo de mezcla.  
+// Ejemplo de uso: 
+// merge([1,2,5], [3, 4, 6]) = [1, 2, 3, 4, 5, 6]
+// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+// =============================================================================================
 float[] merge(float[] left, float[] right) {
     float[] result;
     result.length = left.length + right.length;
@@ -27,6 +37,16 @@ float[] merge(float[] left, float[] right) {
     return result;
 }
 
+// =============================================================================================
+// Función: merge_sort
+// =============================================================================================
+// Función que implementa la típica función merge_sort, que divide el arreglo en sub arreglos 
+// que se evalúan recursivos y que se consideran ordenados cuando su longitud es uno, para luego
+// llamar a merge para que los ordene de a pares según cada llamada.
+// Ejemplo de uso: 
+// merge_sort([1,5,6,2,4,3) = [1, 2, 3, 4, 5, 6]
+// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+// =============================================================================================
 float[] merge_sort(float[] array){
     // Caso base
     if(array.length == 1){

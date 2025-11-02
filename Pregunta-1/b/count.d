@@ -1,6 +1,19 @@
 import std.stdio;
 import std.conv;
 
+// =============================================================================================
+// Función: count
+// =============================================================================================
+// Función que cuenta cuántas veces se debe aplicar la función dist a un número hasta que
+// su resultado sea 1. La función dist es definida como
+//     dist(n) = n / 2       si n es par
+//     dist(n) = 3 * n + 1   si n es impar     
+// Ejemplo de uso: 
+// cont(5) = 4
+// porque 5 -> 3 * (5) + 1 = 16 -> 16 / 2 = 4 -> 4 / 2 = 2 -> 2 / 2 -> 1
+// En total se realizó 4 veces la función dist
+// Si quiere más detalles de la implementación, recuerde que adjunta a la entrega hay un PDF técnico
+// =============================================================================================
 int count(int n, int acc = 0){
     if(n == 1){
         return acc;
@@ -17,5 +30,5 @@ int count(int n, int acc = 0){
 }
 
 void main(){
-    writeln(count(10));
+    writeln(count(5));
 }
